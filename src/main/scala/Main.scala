@@ -1,4 +1,6 @@
 import com.github.tototoshi.csv._
+import java.time.LocalDate
+import java.time.format.{DateTimeFormatter,DateTimeFormatterBuilder}
 import scala.util.matching.Regex
 
 val startEndHhMmPattern = Regex("([0-9]{1,2})[:.]([0-9]{2})-(?:([0-9]{1,2})[:.])?([0-9]{2})")
@@ -13,6 +15,11 @@ def splitHhMm(time: String): Option[Tuple4[Int, Int, Int, Int]] =
     return Some((startHh.toInt, startMm.toInt, endHh.toInt, endMm.toInt))
   None
 
+/** default date/time formatter */
+val dateFormat = DateTimeFormatterBuilder()
+  .appendPattern("uuuu-MM-dd")
+  .toFormatter()
+
 /** Main program */
 @main def main: Unit = 
   // Open CSV input file for reading
@@ -25,18 +32,20 @@ def splitHhMm(time: String): Option[Tuple4[Int, Int, Int, Int]] =
       // for each CSV record, create one Org tree
       printf("* %s\n", line.head)
       println("  :LOGBOOK:")
-      headers.tail.zip(line.tail).foreach( (date, intervals) => {
-        if ! "".equals(intervals) then
-          intervals.split(',').map(_.trim).foreach( interval => {
-            if !interval.isBlank then
+      headers.tail.map( date =>
+          LocalDate.parse(date, dateFormat)
+          ).zip(line.tail).foreach( (date, intervals) => {
+            if ! "".equals(intervals) then
+            intervals.split(',').map(_.trim).foreach( interval => {
+              if !interval.isBlank then
               splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
-                // TODO handle post 24:00
-                printf("  CLOCK: [%s %02d:%02d]--[%s %02d:%02d] => \n", date, startHh, startMm, date, endHh, endMm)
-              )
+                  // TODO handle post 24:00
+                  printf("  CLOCK: [%s %02d:%02d]--[%s %02d:%02d] => \n", date, startHh, startMm, date, endHh, endMm)
+                  )
+            })
+          end if
           })
-        end if
-      })
-      println("  :END:")
+        println("  :END:")
     })
   })
   reader.close()
