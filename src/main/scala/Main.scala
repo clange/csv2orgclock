@@ -1,23 +1,29 @@
 import com.github.tototoshi.csv._
 import java.time.LocalDate
 import java.time.format.{DateTimeFormatter,DateTimeFormatterBuilder}
-import scala.util.matching.Regex
 
-val startEndHhMmPattern = Regex("([0-9]{1,2})[:.]([0-9]{2})-(?:([0-9]{1,2})[:.])?([0-9]{2})")
+val startEndHhMmPattern = "([0-9]{1,2})[:.]([0-9]{2})-(?:([0-9]{1,2})[:.])?([0-9]{2})".r
 
 def splitHhMm(time: String): Option[Tuple4[Int, Int, Int, Int]] =
-  for patternMatch <- startEndHhMmPattern.findAllMatchIn(time) do
-    val startHh = patternMatch.group(1)
-    val startMm = patternMatch.group(2)
-    val match3 = patternMatch.group(3)
-    val endHh = Option(match3).getOrElse(startHh)
-    val endMm = patternMatch.group(4)
-    return Some((startHh.toInt, startMm.toInt, endHh.toInt, endMm.toInt))
-  None
+  time match {
+    case startEndHhMmPattern(group1, group2, group3, group4) => {
+        val startHh = group1
+        val startMm = group2
+        val endHh = Option(group3).getOrElse(startHh)
+        val endMm = group4
+        Some((startHh.toInt, startMm.toInt, endHh.toInt, endMm.toInt))
+      }
+    case _ => None
+  }
 
-/** default date/time formatter */
+/** formatter for reading dates */
 val dateFormat = DateTimeFormatterBuilder()
   .appendPattern("uuuu-MM-dd")
+  .toFormatter()
+
+/** formatter for writing date/time stamps */
+val dateTimeFormat = DateTimeFormatterBuilder()
+  .appendPattern("uuuu-MM-dd E HH:mm")
   .toFormatter()
 
 /** Main program */
@@ -36,14 +42,16 @@ val dateFormat = DateTimeFormatterBuilder()
           LocalDate.parse(date, dateFormat)
           ).zip(line.tail).foreach( (date, intervals) => {
             if ! "".equals(intervals) then
-            intervals.split(',').map(_.trim).foreach( interval => {
-              if !interval.isBlank then
-              splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
-                  // TODO handle post 24:00
-                  printf("  CLOCK: [%s %02d:%02d]--[%s %02d:%02d] => \n", date, startHh, startMm, date, endHh, endMm)
-                  )
-            })
-          end if
+              intervals.split(',').map(_.trim).foreach( interval => {
+                if !interval.isBlank then
+                splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
+                    val startDateTime = date.atTime(startHh, startMm)
+                    val endDateTime = date.atTime(endHh, endMm)
+                    // TODO handle post 24:00
+                    printf("  CLOCK: [%s]--[%s] => \n", startDateTime.format(dateTimeFormat), endDateTime.format(dateTimeFormat))
+                    )
+              })
+            end if
           })
         println("  :END:")
     })
