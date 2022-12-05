@@ -50,6 +50,7 @@ val dateTimeFormat = DateTimeFormatterBuilder()
                 splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
                     val startDateTime = date.atTime(startHh, startMm)
                     val parsedEndDateTime = date.atTime(endHh, endMm)
+                    // if the end time is less than the start time, assume an interval going beyond midnight into the next day
                     val endDateTime = if parsedEndDateTime.isBefore(startDateTime)
                       then parsedEndDateTime.plusDays(1)
                       else parsedEndDateTime
