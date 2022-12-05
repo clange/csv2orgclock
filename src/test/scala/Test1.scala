@@ -6,6 +6,12 @@ import java.time.LocalDateTime
 import java.time.temporal.Temporal
 import scala.collection.immutable.{ListMap,SeqMap}
 
+/*
+ * TODO: implement the following tests:
+ * * the construction of parsedReverseHeaders should fail when a header does not contain a valid uuuu-MM-dd date (already throws java.time.format.DateTimeParseException)
+ * * a cell (task/day) entry contains an interval that cannot be parsed (e.g., HH:mm-): already handled internally
+ */
+
 class PurchaseAmount(override val amountPurchased: BigDecimal)
 extends Purchase(
   amountPurchased,

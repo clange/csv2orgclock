@@ -2,7 +2,6 @@ import com.github.tototoshi.csv._
 import java.time.LocalDate
 import java.time.format.{DateTimeFormatter,DateTimeFormatterBuilder}
 import java.time.temporal.ChronoUnit._
-import scala.compat.Platform.EOL
 
 val startEndHhMmPattern = "([0-9]{1,2})[:.]([0-9]{2})-(?:([0-9]{1,2})[:.])?([0-9]{2})".r
 
@@ -41,12 +40,13 @@ val dateTimeFormat = DateTimeFormatterBuilder()
     // read all further rows from the CSV
     reader.iterator.foreach( line => {
       // for each CSV record, create one Org tree
-      printf("* %s%s", line.head, EOL)
+      printf("* %s%s", line.head, System.lineSeparator())
       println("  :LOGBOOK:")
       parsedReverseHeaders.zip(line.tail.reverse).foreach( (date, intervals) => {
-            if ! "".equals(intervals) then
-              intervals.split(',').reverse.map(_.trim).foreach( interval => {
-                if !interval.isBlank then
+          // process each cell, i.e., task/day entry
+          if ! "".equals(intervals) then
+            intervals.split(',').reverse.map(_.trim).foreach( interval => {
+              if !interval.isBlank then
                 splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
                     val startDateTime = date.atTime(startHh, startMm)
                     val parsedEndDateTime = date.atTime(endHh, endMm)
@@ -54,12 +54,12 @@ val dateTimeFormat = DateTimeFormatterBuilder()
                       then parsedEndDateTime.plusDays(1)
                       else parsedEndDateTime
                     val diffMinutes = MINUTES.between(startDateTime, endDateTime)
-                    printf("  CLOCK: [%s]--[%s] => %2d:%02d%s", startDateTime.format(dateTimeFormat), endDateTime.format(dateTimeFormat), diffMinutes / 60, diffMinutes % 60, EOL)
-                    )
-              })
-            end if
-          })
-        println("  :END:")
+                    printf("  CLOCK: [%s]--[%s] => %2d:%02d%s", startDateTime.format(dateTimeFormat), endDateTime.format(dateTimeFormat), diffMinutes / 60, diffMinutes % 60, System.lineSeparator())
+                  ).getOrElse(throw RuntimeException("Task '%s' on date '%s': interval '%s' cannot be parsed%s".format(line.head, date, interval, System.lineSeparator())))
+            })
+          end if
+        })
+      println("  :END:")
     })
-  })
+  }).getOrElse(throw RuntimeException("Expected a header row with dates"))
   reader.close()
