@@ -5,13 +5,22 @@ import java.time.temporal.ChronoUnit._
 
 val startEndHhMmPattern = "([0-9]{1,2})[:.]([0-9]{2})-(?:([0-9]{1,2})[:.])?([0-9]{2})".r
 
+/** split a time interval (possibly in abbreviated notation)
+ *  into the start/end hour/minute */
 def splitHhMm(time: String): Option[Tuple4[Int, Int, Int, Int]] =
   time match {
     case startEndHhMmPattern(group1, group2, group3, group4) => {
-        val startHh = group1
-        val startMm = group2
-        val endHh = Option(group3).getOrElse(startHh)
-        val endMm = group4
+        val startHh = group1.toInt
+        val startMm = group2.toInt
+        val endMm = group4.toInt
+        val endHh = if group3 == null then
+          // abbreviated notation: when the end hour is not given,
+          // use the same or next hour (whichever results in a positive duration)
+          if endMm <= startMm then
+            (startHh + 1) % 24
+          else startHh
+        else
+          group3.toInt
         Some((startHh.toInt, startMm.toInt, endHh.toInt, endMm.toInt))
       }
     case _ => None
