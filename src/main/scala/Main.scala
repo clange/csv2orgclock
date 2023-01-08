@@ -49,9 +49,12 @@ val dateTimeFormat = DateTimeFormatterBuilder()
     // read all further rows from the CSV
     reader.iterator.foreach( line => {
       // for each CSV record, create one Org tree
+      // TODO put this after empty tasks have been filtered out
       printf("* %s%s", line.head, System.lineSeparator())
       println("  :LOGBOOK:")
-      parsedReverseHeaders.zip(line.tail.reverse).foreach( (date, intervals) => {
+      val tasks = parsedReverseHeaders.zip(line.tail.reverse)
+      // TODO filter out empty ones
+      tasks.foreach( (date, intervals) => {
           // process each cell, i.e., task/day entry
           if ! "".equals(intervals) then
             intervals.split(',').reverse.map(_.trim).foreach( interval => {
