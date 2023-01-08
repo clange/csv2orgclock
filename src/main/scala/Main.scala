@@ -48,31 +48,29 @@ val dateTimeFormat = DateTimeFormatterBuilder()
         )
     // read all further rows from the CSV
     reader.iterator.foreach( line => {
-      // for each CSV record, create one Org tree
-      // TODO put this after empty tasks have been filtered out
-      printf("* %s%s", line.head, System.lineSeparator())
-      println("  :LOGBOOK:")
-      val tasks = parsedReverseHeaders.zip(line.tail.reverse)
-      // TODO filter out empty ones
-      tasks.foreach( (date, intervals) => {
+      val tasks = parsedReverseHeaders.zip(line.tail.reverse).filter( (date, intervals) => ! "".equals(intervals) )
+      if ! tasks.isEmpty then
+        // for each CSV record, create one Org tree
+        printf("* %s%s", line.head, System.lineSeparator())
+        println("  :LOGBOOK:")
+        tasks.foreach( (date, intervals) => {
           // process each cell, i.e., task/day entry
-          if ! "".equals(intervals) then
-            intervals.split(',').reverse.map(_.trim).foreach( interval => {
-              if !interval.isBlank then
-                splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
-                    val startDateTime = date.atTime(startHh, startMm)
-                    val parsedEndDateTime = date.atTime(endHh, endMm)
-                    // if the end time is less than the start time, assume an interval going beyond midnight into the next day
-                    val endDateTime = if parsedEndDateTime.isBefore(startDateTime)
-                      then parsedEndDateTime.plusDays(1)
-                      else parsedEndDateTime
-                    val diffMinutes = MINUTES.between(startDateTime, endDateTime)
-                    printf("  CLOCK: [%s]--[%s] => %2d:%02d%s", startDateTime.format(dateTimeFormat), endDateTime.format(dateTimeFormat), diffMinutes / 60, diffMinutes % 60, System.lineSeparator())
-                  ).getOrElse(throw RuntimeException("Task '%s' on date '%s': interval '%s' cannot be parsed%s".format(line.head, date, interval, System.lineSeparator())))
-            })
-          end if
+          intervals.split(',').reverse.map(_.trim).foreach( interval => {
+            if !interval.isBlank then
+              splitHhMm(interval).map( (startHh, startMm, endHh, endMm) =>
+                  val startDateTime = date.atTime(startHh, startMm)
+                  val parsedEndDateTime = date.atTime(endHh, endMm)
+                  // if the end time is less than the start time, assume an interval going beyond midnight into the next day
+                  val endDateTime = if parsedEndDateTime.isBefore(startDateTime)
+                    then parsedEndDateTime.plusDays(1)
+                    else parsedEndDateTime
+                  val diffMinutes = MINUTES.between(startDateTime, endDateTime)
+                  printf("  CLOCK: [%s]--[%s] => %2d:%02d%s", startDateTime.format(dateTimeFormat), endDateTime.format(dateTimeFormat), diffMinutes / 60, diffMinutes % 60, System.lineSeparator())
+                ).getOrElse(throw RuntimeException("Task '%s' on date '%s': interval '%s' cannot be parsed%s".format(line.head, date, interval, System.lineSeparator())))
+          })
         })
-      println("  :END:")
+        println("  :END:")
+      end if
     })
   }).getOrElse(throw RuntimeException("Expected a header row with dates"))
   reader.close()
