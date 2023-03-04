@@ -37,9 +37,9 @@ val dateTimeFormat = DateTimeFormatterBuilder()
   .toFormatter()
 
 /** Main program */
-@main def main: Unit = 
+@main def main(file: String): Unit = 
   // Open CSV input file for reading
-  val reader = CSVReader.open("Org.csv")
+  val reader = CSVReader.open(file)
   // read header row from CSV
   val headers = reader.readNext()
   headers.map( headers => {
