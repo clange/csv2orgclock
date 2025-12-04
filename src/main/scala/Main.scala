@@ -43,13 +43,14 @@ val dateTimeFormat = DateTimeFormatterBuilder()
   // read header row from CSV
   val headers = reader.readNext()
   headers.map( headers => {
-    val parsedReverseHeaders = headers.tail.reverse.map( date =>
+    // skip the first two columns (task title and sum)
+    val parsedReverseHeaders = headers.drop(2).reverse.map( date =>
         LocalDate.parse(date, dateFormat)
         )
-    // read all further rows from the CSV
-    reader.iterator.filter( line => {
+    // read all further rows from the CSV, skipping the first content row (sum)
+    reader.iterator.drop(1).filter( line => {
       // keep those that contain clock entries
-      line.tail.exists( intervals => !"".equals(intervals) )
+      line.drop(2).exists( intervals => !"".equals(intervals) )
     }).foreach( line => {
       // for each CSV record, create one Org tree
       printf("* %s%s", line.head, System.lineSeparator())

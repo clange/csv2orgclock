@@ -5,7 +5,7 @@ This is convenient when you do not have access to your full Org mode setup, e.g.
 
 For subsequent processing, e.g., generating reports that can be further transcribed into official timesheets, I recommend following the [clocktable-spreadsheet](https://github.com/clange/org-mode) principle.
 
-See here for [a sample spreadsheet with a useful coloring setup](https://docs.google.com/spreadsheets/d/1aO8h8o7xVB1Rz_r4bL6rBATCjl_2OOMCxjP8Td2fwAo/edit?usp=sharing).  Exporting that to CSV creates an input file ready for this program.
+See here for [a sample spreadsheet with a useful coloring setup](https://docs.google.com/spreadsheets/d/1aO8h8o7xVB1Rz_r4bL6rBATCjl_2OOMCxjP8Td2fwAo/edit?usp=sharing).  Exporting that to CSV creates an input file ready for this program.  Recently, in late 2025, I added something that's not yet reflected in this sample spreadsheet: row 2 and column B do not contain proper data but sums, which should not be processed by this program.
 
 ### Usage
 
